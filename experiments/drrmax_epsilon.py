@@ -113,4 +113,9 @@ def train_epsilon(
     evaluate(checkpoint_dir=save_dir, experiment_name=experiment_name)
 
 if __name__ == "__main__":
-    train_epsilon()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--episodes', type=int, default=5000, help='Number of training episodes')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
+    args = parser.parse_args()
+    train_epsilon(num_episodes=args.episodes, batch_size=args.batch_size)
