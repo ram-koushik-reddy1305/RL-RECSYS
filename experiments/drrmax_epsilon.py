@@ -22,7 +22,7 @@ def train_epsilon(
     """
     print("Initializing Environment, Agent, and Epsilon-Greedy Explorer...")
     env = KuaiRecEnvironment(
-        csv_file_path='kuairec_final.csv',
+        csv_file_path='kuairec_train_split.csv',
         pmf_user_path='pmf1_user_embeddings.npy',
         pmf_item_path='pmf1_item_embeddings.npy',
         latent_dim=200,
