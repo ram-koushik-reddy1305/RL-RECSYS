@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 from env import KuaiRecEnvironment
 from agent import DDPGAgent
 
@@ -9,7 +10,8 @@ def train(
     noise_std: float = 0.1, 
     actor_lr: float = 1e-4, 
     critic_lr: float = 1e-3,
-    save_dir: str = "./checkpoints"
+    save_dir: str = "./checkpoints",
+    experiment_name: str = "drrmax_baseline"
 ):
     """
     DDPG Training Loop for Recommender System integrated with PMF embeddings and State Generation Module.
@@ -86,10 +88,21 @@ def train(
             
     # Save trained networks
     os.makedirs(save_dir, exist_ok=True)
-    agent.save(save_dir, prefix="baseline_")
-    print(f"Training completed. Models saved to {save_dir}/")
+    agent.save(save_dir, prefix=f"{experiment_name}_")
+    print(f"Training completed. Models saved to {save_dir}/ with prefix {experiment_name}_")
+    
+    # Save training metrics to results folder
+    os.makedirs("results", exist_ok=True)
+    df_logs = pd.DataFrame({
+        'Episode': range(1, num_episodes + 1),
+        'Average_Reward': rewards_history,
+        'Critic_Loss': critic_losses,
+        'Actor_Loss': actor_losses
+    })
+    df_logs.to_csv(f'results/{experiment_name}_training.csv', index=False)
+    print(f"Saved training logs to results/{experiment_name}_training.csv")
     
     return rewards_history, actor_losses, critic_losses
 
 if __name__ == "__main__":
-    train(num_episodes=200)
+    train(num_episodes=200, experiment_name="drrmax_baseline")

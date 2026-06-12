@@ -34,3 +34,8 @@ KuaiRec.zip
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Allow results directory tracking
+!results/
+!results/*.csv
+!results/*.json

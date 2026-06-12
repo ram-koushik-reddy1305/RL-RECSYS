@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import torch
 from env import KuaiRecEnvironment
@@ -25,13 +26,14 @@ def evaluate(
     checkpoint_dir: str = "./checkpoints", 
     num_test_users: int = 50, 
     k_list: list[int] = [1, 5, 10], 
-    relevance_threshold: float = -0.5  # Since ratings are normalized to [-1, 1] with clip=2.0, > -0.5 represents watch_ratio > 0.5
+    relevance_threshold: float = -0.5,  # Since ratings are normalized to [-1, 1] with clip=2.0, > -0.5 represents watch_ratio > 0.5
+    experiment_name: str = "drrmax_baseline"
 ):
     """
     Evaluates the trained DDPG agent on a set of test users.
     Calculates Precision@K, Recall@K, NDCG@K, and Average Cumulative Reward.
     """
-    print("Initializing Evaluation...")
+    print(f"Initializing Evaluation for experiment: {experiment_name}...")
     env = KuaiRecEnvironment(
         csv_file_path='kuairec_final.csv',
         pmf_user_path='pmf1_user_embeddings.npy',
@@ -44,8 +46,8 @@ def evaluate(
     
     # Load weights from checkpoint
     try:
-        agent.load(checkpoint_dir, prefix="baseline_")
-        print(f"Loaded trained models from {checkpoint_dir}/")
+        agent.load(checkpoint_dir, prefix=f"{experiment_name}_")
+        print(f"Loaded trained models from {checkpoint_dir}/ with prefix {experiment_name}_")
     except Exception as e:
         print(f"Warning: Could not load trained models from {checkpoint_dir}. Reason: {e}")
         print("Proceeding with randomly initialized agent for testing.")
@@ -121,7 +123,7 @@ def evaluate(
             
     # Compile and display final results
     print("\n" + "="*40)
-    print("EVALUATION RESULTS")
+    print(f"EVALUATION RESULTS: {experiment_name}")
     print(f"Average Cumulative Reward: {np.mean(rewards_list):.4f}")
     print("-"*40)
     for k in k_list:
@@ -131,7 +133,20 @@ def evaluate(
         print(f"  NDCG@{k}      : {np.mean(metrics[k]['ndcg']):.4f}")
     print("="*40 + "\n")
     
+    # Save the final scores to results directory
+    metrics_data = {
+        "avg_cumulative_reward": float(np.mean(rewards_list)),
+        "precision": {str(k): float(np.mean(metrics[k]["precision"])) for k in k_list},
+        "recall": {str(k): float(np.mean(metrics[k]["recall"])) for k in k_list},
+        "ndcg": {str(k): float(np.mean(metrics[k]["ndcg"])) for k in k_list}
+    }
+    
+    os.makedirs("results", exist_ok=True)
+    with open(f"results/{experiment_name}_evaluation.json", "w") as f:
+        json.dump(metrics_data, f, indent=4)
+    print(f"Saved evaluation metrics to results/{experiment_name}_evaluation.json")
+    
     return metrics, np.mean(rewards_list)
 
 if __name__ == "__main__":
-    evaluate()
+    evaluate(experiment_name="drrmax_baseline")
