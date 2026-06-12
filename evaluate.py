@@ -22,6 +22,25 @@ def calculate_ndcg(recommended_relevances, ideal_relevances, k):
         return 0.0
     return dcg / idcg
 
+def calculate_map(recommended_relevances, relevance_threshold, total_liked, k):
+    """
+    Computes Mean Average Precision (MAP) @ K for recommended item relevances.
+    """
+    rec_rel = recommended_relevances[:k]
+    binary_relevances = (rec_rel > relevance_threshold).astype(int)
+    
+    ap = 0.0
+    hits = 0.0
+    for i, rel in enumerate(binary_relevances):
+        if rel == 1:
+            hits += 1.0
+            ap += hits / (i + 1)
+            
+    denom = min(k, total_liked) if total_liked > 0 else k
+    if denom == 0:
+        return 0.0
+    return ap / denom
+
 def evaluate(
     checkpoint_dir: str = "./checkpoints", 
     num_test_users: int = 50, 
@@ -31,7 +50,7 @@ def evaluate(
 ):
     """
     Evaluates the trained DDPG agent on a set of test users.
-    Calculates Precision@K, Recall@K, NDCG@K, and Average Cumulative Reward.
+    Calculates Precision@K, Recall@K, NDCG@K, MAP@K, and Average Cumulative Reward.
     """
     print(f"Initializing Evaluation for experiment: {experiment_name}...")
     env = KuaiRecEnvironment(
@@ -53,7 +72,7 @@ def evaluate(
         print("Proceeding with randomly initialized agent for testing.")
 
     # Dictionary to store metrics for each K
-    metrics = {k: {"precision": [], "recall": [], "ndcg": []} for k in k_list}
+    metrics = {k: {"precision": [], "recall": [], "ndcg": [], "map": []} for k in k_list}
     rewards_list = []
     
     # Evaluate over test users
@@ -66,6 +85,7 @@ def evaluate(
         user_precision = {k: [] for k in k_list}
         user_recall = {k: [] for k in k_list}
         user_ndcg = {k: [] for k in k_list}
+        user_map = {k: [] for k in k_list}
         
         done = False
         while not done:
@@ -112,6 +132,10 @@ def evaluate(
                 ndcg = calculate_ndcg(rec_relevances, ideal_relevances, k)
                 user_ndcg[k].append(ndcg)
                 
+                # MAP@K
+                map_score = calculate_map(actual_relevances, relevance_threshold, total_liked_items, k)
+                user_map[k].append(map_score)
+                
             state = next_state
             
         rewards_list.append(sum(session_rewards))
@@ -120,6 +144,7 @@ def evaluate(
             metrics[k]["precision"].append(np.mean(user_precision[k]))
             metrics[k]["recall"].append(np.mean(user_recall[k]))
             metrics[k]["ndcg"].append(np.mean(user_ndcg[k]))
+            metrics[k]["map"].append(np.mean(user_map[k]))
             
     # Compile and display final results
     print("\n" + "="*40)
@@ -131,6 +156,7 @@ def evaluate(
         print(f"  Precision@{k} : {np.mean(metrics[k]['precision']):.4f}")
         print(f"  Recall@{k}    : {np.mean(metrics[k]['recall']):.4f}")
         print(f"  NDCG@{k}      : {np.mean(metrics[k]['ndcg']):.4f}")
+        print(f"  MAP@{k}       : {np.mean(metrics[k]['map']):.4f}")
     print("="*40 + "\n")
     
     # Save the final scores to results directory
@@ -138,7 +164,8 @@ def evaluate(
         "avg_cumulative_reward": float(np.mean(rewards_list)),
         "precision": {str(k): float(np.mean(metrics[k]["precision"])) for k in k_list},
         "recall": {str(k): float(np.mean(metrics[k]["recall"])) for k in k_list},
-        "ndcg": {str(k): float(np.mean(metrics[k]["ndcg"])) for k in k_list}
+        "ndcg": {str(k): float(np.mean(metrics[k]["ndcg"])) for k in k_list},
+        "map": {str(k): float(np.mean(metrics[k]["map"])) for k in k_list}
     }
     
     os.makedirs("results", exist_ok=True)
