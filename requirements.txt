@@ -1,0 +1,10 @@
+# Data Manipulation & Processing
+pandas
+numpy
+
+# Deep Learning & Reinforcement Learning Framework
+torch
+torchvision
+
+# Evaluation & Software Utilities
+scikit-learn

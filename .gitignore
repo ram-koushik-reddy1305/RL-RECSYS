@@ -1,0 +1,36 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env
+.env.*
+
+# PyTorch / ML artifacts
+*.pth
+*.pt
+*.npy
+*.npz
+
+# Dataset and cache files
+*.csv
+*.tsv
+*.parquet
+*.jsonl
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Dataset and archive files
+KuaiRec.zip
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# OS generated files
+.DS_Store
+Thumbs.db
