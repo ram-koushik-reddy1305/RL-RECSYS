@@ -23,9 +23,9 @@ def train_ucb(
     """
     print("Initializing Environment, Agent, and UCB Explorer...")
     env = KuaiRecEnvironment(
-        csv_file_path='C:/RL DRR_MAX/RL-RECSYS/kuairec_train_split.csv',
-        pmf_user_path='C:/RL DRR_MAX/RL-RECSYS/pmf1_user_embeddings.npy',
-        pmf_item_path='C:/RL DRR_MAX/RL-RECSYS/pmf1_item_embeddings.npy',
+        csv_file_path='kuairec_train_split.csv',
+        pmf_user_path='pmf1_user_embeddings.npy',
+        pmf_item_path='pmf1_item_embeddings.npy',
         latent_dim=200,
         max_steps=10
     )

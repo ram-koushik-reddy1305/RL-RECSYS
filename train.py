@@ -3,9 +3,10 @@ import numpy as np
 import pandas as pd
 from env import KuaiRecEnvironment
 from agent import DDPGAgent
+from evaluate import evaluate
 
 def train(
-    num_episodes: int = 200, 
+    num_episodes: int = 5000, 
     batch_size: int = 128, 
     noise_std: float = 0.1, 
     actor_lr: float = 1e-4, 
@@ -102,7 +103,18 @@ def train(
     df_logs.to_csv(f'results/{experiment_name}_training.csv', index=False)
     print(f"Saved training logs to results/{experiment_name}_training.csv")
     
+    # Run post-training evaluation
+    print("\nRunning post-training evaluation...")
+    evaluate(checkpoint_dir=save_dir, experiment_name=experiment_name)
+    
     return rewards_history, actor_losses, critic_losses
 
 if __name__ == "__main__":
-    train(num_episodes=200, experiment_name="drrmax_baseline")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--episodes', type=int, default=5000, help='Number of training episodes')
+    parser.add_argument('--batch_size', type=int, default=128, help='Batch size for training')
+    parser.add_argument('--noise_std', type=float, default=0.1, help='Standard deviation of Gaussian exploration noise')
+    args = parser.parse_args()
+    
+    train(num_episodes=args.episodes, batch_size=args.batch_size, noise_std=args.noise_std)
