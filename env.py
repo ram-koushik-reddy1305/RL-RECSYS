@@ -63,9 +63,9 @@ class KuaiRecEnvironment:
         else:
             self.current_user_idx = user_idx
             
-        # Find all items this user has interacted with
+        # Find all items this user has interacted with (sentinel un-interacted is -1.0)
         user_ratings = self.ratings_matrix[self.current_user_idx]
-        interacted_items = np.where(user_ratings != 0)[0]
+        interacted_items = np.where(user_ratings != -1.0)[0]
         
         if len(interacted_items) >= 10:
             self.history = list(interacted_items[:10])
